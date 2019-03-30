@@ -1,0 +1,127 @@
+<?php
+/**
+ * hook_menu
+ */
+function custom_menu_menu () {
+    $items = array();
+    $items['admin/custom_data'] = array(
+        'title' => 'Custom Menu',
+        'description' => 'My Description',
+        'position' => 'left',
+        'weight' => -100,
+        'page callback' => 'system_admin_menu_block_page',
+        'access arguments' => array('access custom menu content'),
+        'file' => 'system.admin.inc',
+        'file path' => drupal_get_path('module', 'system'),      
+    );
+
+    $items['admin/custom_data/display_data'] = array(
+          'title' => 'My Item display name',
+          'description' => 'My Item Description',
+          'page callback' => 'my_menu_page',
+          'access arguments' => array('access custom menu content'),
+    );
+    return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function custom_menu_permission() {
+  return array(
+    'access custom menu content' => array(
+      'title' => t('Access content for the Custom menu module'),
+    )
+  );
+}
+
+/**
+ * custom page callback function
+ */
+function my_menu_page(){
+    global $user;
+    $user_fields = user_load($user->uid);
+    if(isset($user_fields->roles[3])){ 
+        return "Welcome Admin";
+    } else if (isset($user_fields->roles[4])) {
+        return "Welcome Manager";
+    } else if (isset($user_fields->roles[5])) {
+        return "Welcome Customer";
+    }    
+}
+
+/**
+ * Implements hook_views_api()
+ */
+function custom_menu_views_api(){
+  return array('api' => '3',
+   'path' => drupal_get_path('module', 'custom_menu'). '/views',
+   );
+}
+
+/**
+ * Implements hook_cron().
+ */
+
+function custom_menu_cron(){
+  custom_menu_data_process();
+  
+
+}
+
+function custom_menu_data_process() {
+    $node_data = db_query('SElECT type as content_type, count(nid) as count from {node} GROUP BY type');
+    watchdog('cron', $node_data);
+}
+
+/**
+ * Implementation of hook_drush_command().
+ */
+function custom_menu_drush_command() {
+  $items = array();
+  $items['node-count'] = array(
+    'callback' => 'custom_menu_node_count',  // Callback function
+    'description' => 'Drush command to get node count of particular node type.',
+    'aliases' => array('nc'), // alias of command
+    'examples' => array(      // List these example when user types : drush help nc
+      'Get all nodes count' => 'drush nc',
+      'Get articles node count' => 'drush nc article',
+      'Get articles, pages node count' => 'drush nc article page',
+    ),
+  );
+return $items;
+}
+
+/*
+ * Callback function for hook_drush_command().
+ */
+function custom_menu_node_count() {
+  // Get arguments passed in command, Ex: drush nc page blog
+  $args = func_get_args();
+  if ($args) {
+    // Loop for types
+    foreach($args as $type){
+      // Query to get count of particular type
+      $result = db_select('node', 'n')
+        ->fields('n', array('nid'))
+        ->condition('type', $type, '=')
+        ->condition('status', 1)
+        ->execute();
+      $num_of_results = $result->rowCount();
+      drush_print("Total number of " .$type. "'s published nodes: " . $num_of_results);
+    }
+
+  }
+  // If no type passed then return total count
+  else {
+    drush_print('Total No. of published nodes: ');
+
+    $result = db_select('node', 'n')
+      ->fields('n', array('nid'))
+      ->condition('status', 1)
+      ->execute();
+    $num_of_results = $result->rowCount();
+
+    drush_print('Count of all published nodes: '. $num_of_results);
+  }
+}

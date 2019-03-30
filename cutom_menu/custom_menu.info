@@ -1,0 +1,7 @@
+name = custom_menu
+description = “custom menu to display role wise data”
+core = 7.x
+
+files[] = custom_menu.install
+files[] = views/custom_menu.views.inc
+dependencies[] = views:views 

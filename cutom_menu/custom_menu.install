@@ -1,0 +1,42 @@
+<?php
+/**
+ * hook_schema()
+ */
+function custom_menu_schema() {
+   $schema['final_report'] = array(     
+     'description' => 'The base table for nodes.',
+     'fields' => array(
+       'rid' => array(
+         'description' => 'The primary identifier for a record.',
+         'type' => 'serial',
+         'unsigned' => TRUE,
+         'not null' => TRUE,
+       ), 
+       'gid' => array(
+         'description' => 'Group id for which report had finalized. ',
+         'type' => 'text',
+         'not null' => FALSE,
+       ),
+       'finalized_node' => array(
+         'description' => 'Finalized Node',
+         'type' => 'int',
+         'not null' => FALSE,
+         ),
+
+       'start_date' => array(
+         'description' => 'Start date of report',
+         'type' => 'text',
+         'not null' => FALSE,
+       ),
+       'end_date' => array(
+         'description' => 'End date of report',
+         'type' => 'text',
+         'not null' => FALSE,
+       ),
+
+       ),
+        'primary key' => array('rid'),
+       );
+
+       return $schema;
+  }
